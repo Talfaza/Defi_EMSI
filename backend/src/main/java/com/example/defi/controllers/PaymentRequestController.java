@@ -4,10 +4,12 @@ import com.example.defi.entities.Clinic;
 import com.example.defi.entities.Patient;
 import com.example.defi.entities.PaymentRequest;
 import com.example.defi.entities.Status;
+import com.example.defi.entities.RiskPredictionResponse;
 import com.example.defi.repositories.ClinicRepository;
 import com.example.defi.repositories.PatientRepository;
 import com.example.defi.services.BlockchainService;
 import com.example.defi.services.PaymentRequestService;
+import com.example.defi.services.RiskPredictionService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.math.BigDecimal;
@@ -22,16 +24,19 @@ public class PaymentRequestController {
     private final ClinicRepository clinicRepository;
     private final PatientRepository patientRepository;
     private final BlockchainService blockchainService;
+    private final RiskPredictionService riskPredictionService;
 
     public PaymentRequestController(
             PaymentRequestService paymentRequestService,
             ClinicRepository clinicRepository,
             PatientRepository patientRepository,
-            BlockchainService blockchainService) {
+            BlockchainService blockchainService,
+            RiskPredictionService riskPredictionService) {
         this.paymentRequestService = paymentRequestService;
         this.clinicRepository = clinicRepository;
         this.patientRepository = patientRepository;
         this.blockchainService = blockchainService;
+        this.riskPredictionService = riskPredictionService;
     }
 
     @GetMapping("/all")
@@ -91,6 +96,34 @@ public class PaymentRequestController {
     @GetMapping("/clinic/{clinicId}/pending")
     public List<PaymentRequest> getClinicPendingPayments(@PathVariable Long clinicId) {
         return paymentRequestService.findPendingByClinicId(clinicId);
+    }
+
+    /**
+     * Get risk prediction for a patient/clinic/amount combination
+     */
+    @PostMapping("/risk")
+    public ResponseEntity<?> getRiskPrediction(@RequestBody Map<String, Object> body) {
+        try {
+            String patientWallet = (String) body.get("patientWallet");
+            Long clinicId = Long.valueOf(body.get("clinicId").toString());
+            Double amount = Double.valueOf(body.get("amount").toString());
+
+            RiskPredictionResponse response = riskPredictionService.predictRiskByWallet(
+                    patientWallet, clinicId, amount);
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    /**
+     * Check if ML service is available
+     */
+    @GetMapping("/risk/health")
+    public ResponseEntity<?> checkMlServiceHealth() {
+        boolean available = riskPredictionService.isServiceAvailable();
+        return ResponseEntity.ok(Map.of("available", available));
     }
 
     @PostMapping("/{id}/pay")
