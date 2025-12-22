@@ -1,1 +1,3 @@
 /home/talfaza/Desktop/Defi/backend/src/test/java/com/example/defi/MinimalSpringApplicationTests.java
+/home/talfaza/Desktop/Defi/backend/src/test/java/com/example/defi/services/BlockchainServiceTest.java
+/home/talfaza/Desktop/Defi/backend/src/test/java/com/example/defi/services/PaymentRequestServiceTest.java

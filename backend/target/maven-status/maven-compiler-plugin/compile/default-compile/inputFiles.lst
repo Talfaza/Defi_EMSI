@@ -11,6 +11,8 @@
 /home/talfaza/Desktop/Defi/backend/src/main/java/com/example/defi/entities/Patient.java
 /home/talfaza/Desktop/Defi/backend/src/main/java/com/example/defi/entities/PaymentHistory.java
 /home/talfaza/Desktop/Defi/backend/src/main/java/com/example/defi/entities/PaymentRequest.java
+/home/talfaza/Desktop/Defi/backend/src/main/java/com/example/defi/entities/RiskPredictionRequest.java
+/home/talfaza/Desktop/Defi/backend/src/main/java/com/example/defi/entities/RiskPredictionResponse.java
 /home/talfaza/Desktop/Defi/backend/src/main/java/com/example/defi/entities/Status.java
 /home/talfaza/Desktop/Defi/backend/src/main/java/com/example/defi/repositories/AlertHistoryRepository.java
 /home/talfaza/Desktop/Defi/backend/src/main/java/com/example/defi/repositories/AlertRepository.java
@@ -28,3 +30,4 @@
 /home/talfaza/Desktop/Defi/backend/src/main/java/com/example/defi/services/PatientService.java
 /home/talfaza/Desktop/Defi/backend/src/main/java/com/example/defi/services/PaymentHistoryService.java
 /home/talfaza/Desktop/Defi/backend/src/main/java/com/example/defi/services/PaymentRequestService.java
+/home/talfaza/Desktop/Defi/backend/src/main/java/com/example/defi/services/RiskPredictionService.java
