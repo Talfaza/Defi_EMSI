@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../app_colors.dart';
 import '../services/blockchain_service.dart';
 import '../services/payment_service.dart';
@@ -146,6 +147,7 @@ class _PatientHomePageState extends State<_PatientHomePage> {
     return Scaffold(
       backgroundColor: AppColors.softBlueBackground,
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         backgroundColor: AppColors.softBlueBackground,
         elevation: 0,
         title: const Text(
@@ -549,6 +551,7 @@ class _PatientSettingsPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         backgroundColor: Colors.white,
         elevation: 0,
         title: const Text(
@@ -1046,12 +1049,33 @@ class _WalletPageState extends State<WalletPage> {
                   color: Colors.grey[100],
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Text(
-                  widget.walletAddress,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontFamily: 'monospace',
-                  ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        widget.walletAddress,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontFamily: 'monospace',
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.copy, size: 20),
+                      color: const Color(0xFF1976D2),
+                      tooltip: 'Copy address',
+                      onPressed: () {
+                        Clipboard.setData(ClipboardData(text: widget.walletAddress));
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Wallet address copied to clipboard'),
+                            duration: Duration(seconds: 2),
+                            backgroundColor: Color(0xFF1976D2),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(height: 24),

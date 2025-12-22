@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../app_colors.dart';
 import '../services/blockchain_service.dart';
 import '../services/payment_service.dart';
+import '../services/risk_prediction_service.dart';
 
 class ClinicShell extends StatefulWidget {
   final String clinicName;
@@ -137,6 +139,7 @@ class _ClinicHomePageState extends State<_ClinicHomePage> {
     return Scaffold(
       backgroundColor: AppColors.softBlueBackground,
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         backgroundColor: AppColors.softBlueBackground,
         elevation: 0,
         title: const Text(
@@ -241,6 +244,45 @@ class _ClinicRequestPaymentPageState extends State<_ClinicRequestPaymentPage> {
   final _amountController = TextEditingController();
   final _descriptionController = TextEditingController();
   bool _isLoading = false;
+  RiskPrediction? _riskPrediction;
+  bool _isLoadingRisk = false;
+
+  Future<void> _checkRisk() async {
+    final wallet = _walletController.text.trim();
+    final amountText = _amountController.text.trim();
+    
+    if (wallet.isEmpty || amountText.isEmpty) {
+      setState(() => _riskPrediction = null);
+      return;
+    }
+    
+    final amount = double.tryParse(amountText);
+    if (amount == null || amount <= 0) {
+      setState(() => _riskPrediction = null);
+      return;
+    }
+    
+    setState(() => _isLoadingRisk = true);
+    
+    try {
+      final prediction = await RiskPredictionService.getRiskPrediction(
+        patientWallet: wallet,
+        clinicId: widget.clinicId,
+        amount: amount,
+      );
+      
+      if (mounted) {
+        setState(() {
+          _riskPrediction = prediction;
+          _isLoadingRisk = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoadingRisk = false);
+      }
+    }
+  }
 
   Future<void> _sendPaymentRequest() async {
     if (_walletController.text.isEmpty || 
@@ -273,6 +315,7 @@ class _ClinicRequestPaymentPageState extends State<_ClinicRequestPaymentPage> {
           _walletController.clear();
           _amountController.clear();
           _descriptionController.clear();
+          setState(() => _riskPrediction = null);
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -303,6 +346,18 @@ class _ClinicRequestPaymentPageState extends State<_ClinicRequestPaymentPage> {
     super.dispose();
   }
 
+  Color _getRiskColor() {
+    if (_riskPrediction == null) return Colors.grey;
+    switch (_riskPrediction!.color) {
+      case RiskColor.green:
+        return Colors.green;
+      case RiskColor.yellow:
+        return Colors.orange;
+      case RiskColor.red:
+        return Colors.red;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -315,7 +370,7 @@ class _ClinicRequestPaymentPageState extends State<_ClinicRequestPaymentPage> {
           style: TextStyle(color: Colors.black87),
         ),
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -327,6 +382,7 @@ class _ClinicRequestPaymentPageState extends State<_ClinicRequestPaymentPage> {
                 border: OutlineInputBorder(),
                 hintText: '0x...',
               ),
+              onChanged: (_) => _checkRisk(),
             ),
             const SizedBox(height: 12),
             TextField(
@@ -336,8 +392,70 @@ class _ClinicRequestPaymentPageState extends State<_ClinicRequestPaymentPage> {
                 border: OutlineInputBorder(),
               ),
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              onChanged: (_) => _checkRisk(),
             ),
             const SizedBox(height: 12),
+            // Risk Score Indicator
+            if (_isLoadingRisk)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 8.0),
+                child: Row(
+                  children: [
+                    SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                    SizedBox(width: 8),
+                    Text('Checking risk...', style: TextStyle(color: Colors.grey)),
+                  ],
+                ),
+              )
+            else if (_riskPrediction != null)
+              Container(
+                padding: const EdgeInsets.all(12),
+                margin: const EdgeInsets.only(bottom: 12),
+                decoration: BoxDecoration(
+                  color: _getRiskColor().withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: _getRiskColor().withOpacity(0.5)),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      _riskPrediction!.color == RiskColor.green
+                          ? Icons.check_circle
+                          : _riskPrediction!.color == RiskColor.yellow
+                              ? Icons.warning
+                              : Icons.dangerous,
+                      color: _getRiskColor(),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Payment Risk Assessment',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey[800],
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '${_riskPrediction!.displayText} (${_riskPrediction!.percentage}%)',
+                            style: TextStyle(
+                              color: _getRiskColor(),
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             TextField(
               controller: _descriptionController,
               maxLines: 3,
@@ -458,6 +576,7 @@ class _ClinicSettingsPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         backgroundColor: Colors.white,
         elevation: 0,
         title: const Text(
