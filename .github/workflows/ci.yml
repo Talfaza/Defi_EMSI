@@ -97,8 +97,8 @@ jobs:
         run: |
           mvn clean verify sonar:sonar \
             -Dspring.profiles.active=test \
-            -Dsonar.projectKey=defi-backend \
-            -Dsonar.projectName="DeFi Backend" \
+            -Dsonar.projectKey=Talfaza_Defi_EMSI \
+            -Dsonar.projectName="DeFi EMSI" \
             -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }} \
             -Dsonar.host.url=${{ env.SONAR_HOST_URL }} \
             -Dsonar.token=${{ env.SONAR_TOKEN }} \
