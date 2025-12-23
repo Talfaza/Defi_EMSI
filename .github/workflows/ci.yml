@@ -59,14 +59,13 @@ jobs:
           retention-days: 7
 
   # ============================================
-  # Backend - SonarQube Analysis
+  # Backend - SonarQube Analysis (Optional)
   # ============================================
   sonarqube-backend:
     name: Backend - SonarQube Analysis
     runs-on: ubuntu-latest
     needs: backend
-    # Only run if SonarQube secrets are configured
-    if: ${{ secrets.SONAR_TOKEN != '' }}
+    continue-on-error: true
     defaults:
       run:
         working-directory: backend
