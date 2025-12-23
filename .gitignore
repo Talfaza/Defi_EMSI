@@ -1,2 +1,3 @@
 Article/backend/target/
 backend/src/main/resources/firebase/serviceAccountKey.json
+*.md
