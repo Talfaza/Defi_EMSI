@@ -18,6 +18,7 @@
     <properties>
         <java.version>21</java.version>
         <lombok.version>1.18.42</lombok.version>
+        <sonar.organization>talfaza</sonar.organization>
     </properties>
     <dependencies>
         <dependency>
