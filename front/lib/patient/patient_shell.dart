@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../app_colors.dart';
@@ -22,11 +23,15 @@ class PatientShell extends StatefulWidget {
 
 class _PatientShellState extends State<PatientShell> {
   int _currentIndex = 0;
+  final GlobalKey<_PatientHomePageState> _homePageKey = GlobalKey<_PatientHomePageState>();
+  late final List<Widget> _pages;
 
   @override
-  Widget build(BuildContext context) {
-    final List<Widget> pages = [
+  void initState() {
+    super.initState();
+    _pages = [
       _PatientHomePage(
+        key: _homePageKey,
         userName: widget.userName,
         walletAddress: widget.walletAddress,
         userId: widget.userId,
@@ -34,13 +39,25 @@ class _PatientShellState extends State<PatientShell> {
       _PatientPaymentsPage(
         userId: widget.userId,
         walletAddress: widget.walletAddress,
+        onPaymentComplete: _onPaymentComplete,
       ),
       _PatientHistoryPage(userId: widget.userId),
       const _PatientSettingsPage(),
     ];
+  }
 
+  void _onPaymentComplete() {
+    // Refresh home page data when a payment is completed
+    _homePageKey.currentState?._loadData();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
-      body: pages[_currentIndex],
+      body: IndexedStack(
+        index: _currentIndex,
+        children: _pages,
+      ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: (index) {
@@ -80,6 +97,7 @@ class _PatientHomePage extends StatefulWidget {
   final int userId;
   
   const _PatientHomePage({
+    super.key,
     required this.userName,
     required this.walletAddress,
     required this.userId,
@@ -95,11 +113,23 @@ class _PatientHomePageState extends State<_PatientHomePage> {
   bool _isLoading = true;
   List<Map<String, dynamic>> _pendingPayments = [];
   final BlockchainService _blockchainService = BlockchainService();
+  Timer? _refreshTimer;
 
   @override
   void initState() {
     super.initState();
     _loadData();
+    // Auto-refresh every 10 seconds
+    _refreshTimer = Timer.periodic(const Duration(seconds: 10), (_) {
+      _loadData();
+    });
+  }
+
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    _blockchainService.dispose();
+    super.dispose();
   }
 
   Future<void> _loadData() async {
@@ -134,12 +164,6 @@ class _PatientHomePageState extends State<_PatientHomePage> {
         _totalToPay = total;
       });
     }
-  }
-
-  @override
-  void dispose() {
-    _blockchainService.dispose();
-    super.dispose();
   }
 
   @override
@@ -297,10 +321,12 @@ class _PatientHomePageState extends State<_PatientHomePage> {
 class _PatientPaymentsPage extends StatefulWidget {
   final int userId;
   final String walletAddress;
+  final VoidCallback? onPaymentComplete;
   
   const _PatientPaymentsPage({
     required this.userId,
     required this.walletAddress,
+    this.onPaymentComplete,
   });
 
   @override
@@ -409,6 +435,8 @@ class _PatientPaymentsPageState extends State<_PatientPaymentsPage> {
           ),
         );
         _loadPayments();
+        // Notify parent to refresh balance
+        widget.onPaymentComplete?.call();
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
