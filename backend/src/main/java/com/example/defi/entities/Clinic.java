@@ -24,8 +24,4 @@ public class Clinic {
     @JsonIgnore
     private List<PaymentRequest> paymentRequests;
 
-    @OneToMany(mappedBy = "clinic")
-    @JsonIgnore
-    private List<Alert> alerts;
-
 }

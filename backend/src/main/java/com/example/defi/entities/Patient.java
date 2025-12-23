@@ -29,8 +29,4 @@ public class Patient {
     @JsonIgnore
     private List<PaymentRequest> paymentRequests;
 
-    @OneToMany(mappedBy = "patient")
-    @JsonIgnore
-    private List<Alert> alerts;
-
 }
