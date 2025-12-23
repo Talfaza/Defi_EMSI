@@ -1,3 +1,5 @@
 Article/backend/target/
 backend/src/main/resources/firebase/serviceAccountKey.json
-*.mdbackend/target/
+backend/target/
+front/.dart_tool/
+*.md
